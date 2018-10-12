@@ -1,0 +1,40 @@
+<project name="MyProject" default="dist" basedir=".">
+	<description>
+    simple example build file
+	</description>
+	<!-- set global properties for this build -->
+	<property file = "build.properties"/>
+	<property name="src" location="src"/>
+	<property name="build" location="build"/>
+	<property name="dist" location="dist"/>
+
+	<target name="init">
+		<!-- Create the time stamp -->
+		<tstamp/>
+		<!-- Create the build directory structure used by compile -->
+		<mkdir dir="${build}"/>
+	</target>
+
+	<target name="compile" depends="init"
+        description="compile the source">
+		<!-- Compile the Java code from ${src} into ${build} -->
+		<javac srcdir="${src}" destdir="${build}"/>
+	</target>
+
+	<target name="clean-contents"
+        description="clean up">
+		<delete dir="${drive0}"/>
+		<delete dir="${drive1}"/>
+		<delete dir="${drive2}"/>
+		<delete dir="${drive3}"/>
+	</target>
+
+
+	<target name="run">
+		<exec executable="test.cmd">
+			<arg value=".git"/>
+			<!--<arg value="${arg1}"/>-->
+		</exec>
+	</target>
+
+</project>
