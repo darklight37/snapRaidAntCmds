@@ -1,24 +1,27 @@
-<project name="MyProject" default="dist" basedir=".">
+<project name="MyProject" default="dist" basedir="." xmlns:if="ant:if"  xmlns:unless="ant:unless">
+
 	<description>
     simple example build file
 	</description>
+
 	<!-- set global properties for this build -->
 	<property file = "build.properties"/>
 	<property name="src" location="src"/>
 	<property name="build" location="build"/>
 	<property name="dist" location="dist"/>
 
-	<target name="init">
-		<!-- Create the time stamp -->
-		<tstamp/>
-		<!-- Create the build directory structure used by compile -->
-		<mkdir dir="${build}"/>
-	</target>
 
-	<target name="compile" depends="init"
-        description="compile the source">
-		<!-- Compile the Java code from ${src} into ${build} -->
-		<javac srcdir="${src}" destdir="${build}"/>
+	<target name="sync" description="Syncs the Raid system.">
+		<property name="exec.argument" value="sync"/>
+		<!--var name="exec.argument" value="sync" /-->
+		<property name="w.argument" value=""/>
+		<antcall target="-execute" />
+	</target>
+	
+	<target name="diff" description="Syncs the Raid system.">
+		<property name="exec.argument" value="diff"/>
+		<property name="w.argument" value="###"/>
+		<antcall target="-execute" />
 	</target>
 
 	<target name="clean-contents"
@@ -30,11 +33,16 @@
 	</target>
 
 
-	<target name="run">
-		<exec executable="test.cmd">
-			<arg value=".git"/>
-			<!--<arg value="${arg1}"/>-->
+	<target name="-execute">
+		<!--<echo message="Executing value ${snapRaid.exe}"/>-->
+	
+		<exec executable="${snapRaid.exe}">
+			<arg value="-c"/>
+			<arg value="${snapRaid.config}"/>
+			<arg value="-w" unless:blank="${w.argument}" />
+			<arg value="${exec.argument}"/>
 		</exec>
+		<!--<echo message=""/>-->
 	</target>
 
 </project>
