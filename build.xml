@@ -115,9 +115,9 @@
 				<property name="email.subject" value="Critical - SnapRaid SYNC Operation Failure Alert !!"/>
 				<property name="email.content" value="No SnapRaid Operations are taking place."/>
 				<antcall target="-send.alert.email"/>
+				<fail message="FAIL:: SnapRaid Operation Failure !!!" />
 			</then>
 		</if>
-		<fail message="FAIL:: SnapRaid Operation Failure !!!" />
 	</target>
 
 </project>
