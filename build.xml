@@ -14,31 +14,27 @@
 		
 	<target name="check" description="Syncs the Raid system.">
 		<property name="exec.argument" value="check"/>
-		<property name="m.arg" value=""/>
 		<antcall target="-execute.snapRaid" />
 	</target>
 	
 	<target name="diff" description="Syncs the Raid system.">
 		<property name="exec.argument" value="diff"/>
-		<property name="m.arg" value=""/>
 		<antcall target="-execute.snapRaid" />
 	</target>
 
 	<target name="sync" depends="drive-check" description="Syncs the Raid system.">
 		<property name="exec.argument" value="sync"/>
-		<property name="m.arg" value=""/>
 		<antcall target="-execute.snapRaid" />
 	</target>
 
 	<target name="status" description="Syncs the Raid system.">
 		<property name="exec.argument" value="status"/>
-		<property name="m.arg" value=""/>
 		<antcall target="-execute.snapRaid" />
 	</target>
 
 	<target name="undelete" description="Syncs the Raid system.">
 		<property name="exec.argument" value="fix"/>
-		<property name="m.arg" value="true"/>
+		<property name="m.arg" value=""/>
 		<antcall target="-execute.snapRaid" />
 	</target>
 
@@ -102,11 +98,11 @@
 	</target>
 	
 	<target name="-execute.snapRaid">
-		<exec executable="${snapRaid.home}/${snapRaid.exe}" resultproperty="snapRaid.exe.result" failonerror="true">
+		<exec executable="${snapRaid.home}/${snapRaid.exe}" resultproperty="snapRaid.exe.result" failonerror="false">
 			<arg value="-c"/>
 			<arg value="${snapRaid.home}/${snapRaid.config}"/>
 			<arg value="${exec.argument}"/>
-			<arg value="-m" unless:blank="${m.arg}" />
+			<arg value="-m" if:blank="${m.arg}" />
 		</exec>
 		<if>
 			<and>
@@ -121,7 +117,7 @@
 				<antcall target="-send.alert.email"/>
 			</then>
 		</if>
-		<fail message="FAIL:: Drive error Aaaahhh !!! ${wmic.exe.output}" />
+		<fail message="FAIL:: SnapRaid Operation Failure !!!" />
 	</target>
 
 </project>
