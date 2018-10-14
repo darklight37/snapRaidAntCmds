@@ -1,7 +1,12 @@
-<project name="MyProject" default="dist" basedir="." xmlns:if="ant:if"  xmlns:unless="ant:unless">
+<project name="SnapRaid Ant Maintenance Script" default="dist" basedir="." xmlns:if="ant:if"  xmlns:unless="ant:unless">
+
+	<!-- For ant < 1.6 -->
+	<!--<taskdef resource="net/sf/antcontrib/antcontrib.properties"/>-->
+	<taskdef resource="net/sf/antcontrib/antlib.xml"/>
 
 	<description>
-    simple example build file
+		Script to run WIMC drive check before running SnapRaid sync Command.
+		Capable of sending an alert email.
 	</description>
 
 	<!-- set global properties for this build -->
@@ -11,17 +16,20 @@
 	<property name="dist" location="dist"/>
 
 
-	<target name="sync" description="Syncs the Raid system.">
+	<target name="sync" depends="drive-check" description="Syncs the Raid system.">
 		<property name="exec.argument" value="sync"/>
-		<!--var name="exec.argument" value="sync" /-->
 		<property name="w.argument" value=""/>
-		<antcall target="-execute" />
+		<antcall target="-execute.snapRaid" />
 	</target>
-	
+
 	<target name="diff" description="Syncs the Raid system.">
 		<property name="exec.argument" value="diff"/>
 		<property name="w.argument" value="###"/>
-		<antcall target="-execute" />
+		<antcall target="-execute.snapRaid" />
+	</target>
+
+	<target name="drive-check" description="Check HD status.">
+		<antcall target="-execute.disk.check" />
 	</target>
 
 	<target name="clean-contents"
@@ -32,11 +40,58 @@
 		<delete dir="${drive3}"/>
 	</target>
 
+	<target name="-execute.disk.check">
+		<exec executable="${wmic.exe}" resultproperty="wmic.exe.result" outputproperty="wmic.exe.output" failonerror="true">
+			<arg value="diskdrive" />
+			<arg value="get" />
+			<arg value="status" />
+		</exec>
+		<antcall target="-parse.disk.check" />
+	</target>
 
-	<target name="-execute">
+	<target name="-parse.disk.check">
+		<for param="line" list="${wmic.exe.output}" delimiter="${line.separator}" trim="true">
+			<sequential>
+				<if>
+					<or>
+						<equals arg1="@{line}" arg2="Status" />
+						<equals arg1="@{line}" arg2="OK" />
+					</or>
+					<else>
+						<property name="email.subject" value="Critical - SnapRaid Backup Disk Failure Alert !!"/>
+						<property name="email.content" value="Disk Check Failure WMIC output was: ${wmic.exe.output}"/>
+						<antcall target="-send.alert.email"/>
+						<fail message="Drive error Aaaahhh !!! ${wmic.exe.output}" />
+					</else>				
+				</if>
+			</sequential>
+		</for>
+	</target>
+
+	<target name="-send.alert.email">
+		<echo message="Sending alert email with contents: '${email.content}'."/>
+		<mail enableStartTLS="true" ssl="true" mailhost="${smtp.host.address}" mailport="${smtp.host.port}" subject="${email.subject}" user="${email.user}" password="${email.password}" >
+			<from address="${email.address.from}"/>
+			<to address="${email.address.to}"/>
+			<cc address="${email.address.cc}"/>
+			<message>Sending alert email with contents: '${email.content}'.</message>
+		</mail>
+	</target>
+
+	<target name="antcontrib-test" >
+		<echo message="Testing ant-contrib is working by looping through a list of letters."/>
+		<for list="a,b,c,d,e" param="letter">
+			<sequential>
+				<echo>Letter @{letter}</echo>
+			</sequential>
+		</for>
+	</target>
+
+
+	<target name="-execute.snapRaid">
 		<!--<echo message="Executing value ${snapRaid.exe}"/>-->
-	
-		<exec executable="${snapRaid.exe}">
+
+		<exec executable="${snapRaid.exe}" resultproperty="snapRaid.exe.result" output="snapRaid.exe.output" failonerror="true">
 			<arg value="-c"/>
 			<arg value="${snapRaid.config}"/>
 			<arg value="-w" unless:blank="${w.argument}" />
