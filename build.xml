@@ -11,20 +11,34 @@
 
 	<!-- set global properties for this build -->
 	<property file = "build.properties"/>
-	<property name="src" location="src"/>
-	<property name="build" location="build"/>
-	<property name="dist" location="dist"/>
-
-
-	<target name="sync" depends="drive-check" description="Syncs the Raid system.">
-		<property name="exec.argument" value="sync"/>
-		<property name="w.argument" value=""/>
+		
+	<target name="check" description="Syncs the Raid system.">
+		<property name="exec.argument" value="check"/>
+		<property name="m.arg" value=""/>
+		<antcall target="-execute.snapRaid" />
+	</target>
+	
+	<target name="diff" description="Syncs the Raid system.">
+		<property name="exec.argument" value="diff"/>
+		<property name="m.arg" value=""/>
 		<antcall target="-execute.snapRaid" />
 	</target>
 
-	<target name="diff" description="Syncs the Raid system.">
-		<property name="exec.argument" value="diff"/>
-		<property name="w.argument" value="###"/>
+	<target name="sync" depends="drive-check" description="Syncs the Raid system.">
+		<property name="exec.argument" value="sync"/>
+		<property name="m.arg" value=""/>
+		<antcall target="-execute.snapRaid" />
+	</target>
+
+	<target name="status" description="Syncs the Raid system.">
+		<property name="exec.argument" value="status"/>
+		<property name="m.arg" value=""/>
+		<antcall target="-execute.snapRaid" />
+	</target>
+
+	<target name="undelete" description="Syncs the Raid system.">
+		<property name="exec.argument" value="fix"/>
+		<property name="m.arg" value="true"/>
 		<antcall target="-execute.snapRaid" />
 	</target>
 
@@ -86,18 +100,28 @@
 			</sequential>
 		</for>
 	</target>
-
-
+	
 	<target name="-execute.snapRaid">
-		<!--<echo message="Executing value ${snapRaid.exe}"/>-->
-
-		<exec executable="${snapRaid.exe}" resultproperty="snapRaid.exe.result" output="snapRaid.exe.output" failonerror="true">
+		<exec executable="${snapRaid.home}/${snapRaid.exe}" resultproperty="snapRaid.exe.result" failonerror="true">
 			<arg value="-c"/>
-			<arg value="${snapRaid.config}"/>
-			<arg value="-w" unless:blank="${w.argument}" />
+			<arg value="${snapRaid.home}/${snapRaid.config}"/>
 			<arg value="${exec.argument}"/>
+			<arg value="-m" unless:blank="${m.arg}" />
 		</exec>
-		<!--<echo message=""/>-->
+		<if>
+			<and>
+				<not>
+					<equals arg1="${snapRaid.exe.result}" arg2="0" />
+				</not>
+				<isset property="scheduled.call"/>
+			</and>
+			<then>
+				<property name="email.subject" value="Critical - SnapRaid SYNC Operation Failure Alert !!"/>
+				<property name="email.content" value="No SnapRaid Operations are taking place."/>
+				<antcall target="-send.alert.email"/>
+			</then>
+		</if>
+		<fail message="FAIL:: Drive error Aaaahhh !!! ${wmic.exe.output}" />
 	</target>
 
 </project>
